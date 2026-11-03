@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="color-scheme" content="light dark">
+  <title>StudyCafe — A little space to focus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="./styles.css">
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#explore">Skip to results</a>
+  <nav class="navigation" aria-label="Main navigation">
+    <a class="wordmark" href="#top"><span class="brand-icon" aria-hidden="true">sc.</span>StudyCafe<span class="brand-dot">.</span></a>
+    <div class="nav-actions">
+      <button id="saved" class="quiet-button" type="button" aria-pressed="false">♡ <span>Saved</span> <span id="saved-count">0</span></button>
+      <button id="theme" class="icon-button" type="button" aria-label="Switch to dark mode" aria-pressed="false">☾</button>
+    </div>
+  </nav>
+  <main id="top">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow"><span></span> A CHANGE OF SCENERY</p>
+        <h1 id="hero-title">A little coffee.<br>A little more <em>focus.</em></h1>
+        <p class="hero-description">Find a place nearby to settle in, open your laptop,<br class="desktop-break"> and make a little progress.</p>
+      </div>
+      <div class="hero-art" aria-hidden="true"><img src="./assets/cafe-scene.svg" width="480" height="340" alt=""><span>YOUR NEXT CHAPTER STARTS HERE</span></div>
+    </section>
+    <form id="search" class="search-bar" aria-label="Search nearby places">
+      <div class="location-field"><span class="location-symbol" aria-hidden="true">◎</span><div><span class="field-label">YOUR STARTING POINT</span><strong>Near my current location</strong><small>Location shared when you search</small></div></div>
+      <div class="distance-control">
+        <label for="radius">Search distance <output id="radius-value" for="radius">2.5 km</output></label>
+        <input type="range" id="radius" min="1" max="10" step="0.5" value="2.5" aria-valuetext="2.5 km" aria-describedby="radius-hint">
+        <div class="range-ends"><span>1 km</span><span>10 km</span></div>
+      </div>
+      <button id="locate" class="primary-button" type="submit">Find my spot <span aria-hidden="true">↗</span></button>
+    </form>
+    <div class="search-caption"><button id="choose-area" type="button" class="text-button">Choose an area on the map</button><small id="radius-hint">Adjust your distance, then search.</small><button id="demo" class="text-button" type="button">Just exploring? Try the demo →</button></div>
+    <section class="study-filters" aria-label="Study needs">
+      <span class="field-label">MAKE IT YOUR KIND OF PLACE</span>
+      <div class="chips">
+        <button type="button" class="chip" data-need="quiet" aria-pressed="false">Quiet</button>
+        <button type="button" class="chip" id="wifi" data-need="wifi" aria-pressed="false">Wi-Fi</button>
+        <button type="button" class="chip" data-need="outlets" aria-pressed="false">Power outlets</button>
+        <button type="button" class="chip" data-need="late" aria-pressed="false">Open late</button>
+        <button type="button" class="chip" data-need="group" aria-pressed="false">Group-friendly</button>
+        <button type="button" class="chip" data-need="pets" aria-pressed="false">Pet-friendly</button>
+      </div>
+      <small class="filter-note">Filters match recorded Wi-Fi or your saved study notes. Unrecorded features are unknown. Add notes from a café card.</small>
+    <button id="clear-needs" type="button" class="text-button">Clear study filters</button></section>
+    <section id="explore" aria-labelledby="results-title">
+      <div class="results-heading"><div><p class="eyebrow">YOUR NEXT STUDY SPOT</p><h2 id="results-title">Good places to begin.</h2></div>
+        <div class="view-switch" aria-label="Results view"><button type="button" data-view="split" aria-pressed="true">Split</button><button type="button" data-view="list" aria-pressed="false">List</button><button type="button" data-view="map" aria-pressed="false">Map</button></div>
+      </div>
+      <div class="results-toolbar"><div class="type-filters" aria-label="Place type"><button type="button" data-filter="all" aria-pressed="true">All spots</button><button type="button" data-filter="cafe" aria-pressed="false">Cafés</button><button type="button" data-filter="restaurant" aria-pressed="false">Restaurants</button></div><span id="result-count">Ready to explore</span></div>
+      <p id="status" role="status">Find nearby places or try the demo. Results are ordered by distance.</p>
+      <div class="layout" data-view="split">
+        <div id="list-panel">
+          <div id="skeletons" hidden aria-hidden="true"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+          <ol id="results"><li class="empty-state"><span aria-hidden="true">◎</span><h3>Your next favorite spot is close.</h3><p>Search nearby to find cafés and restaurants, or explore with sample listings.</p></li></ol>
+        </div>
+        <section id="map-panel" aria-label="Map and selected place">
+          <div id="map-placeholder"><span class="map-orbit" aria-hidden="true">◎</span><h3>A new perspective.</h3><p>Search with your location to explore<br>real places on the map.</p></div>
+          <div id="map" hidden></div><div id="area-controls" hidden><p>Drag or zoom the map to your area, then search its center. Initial view is Toronto, not your detected location.</p><button id="search-area" type="button" class="primary-button">Search this map area</button></div>
+          <div id="detail" aria-live="polite"><p class="detail-hint">Select a place to take a closer look.</p></div>
+        </section>
+      </div>
+    </section>
+    <footer><a class="wordmark" href="#top">StudyCafe.</a><p>A little space to do your best work.</p><small>Place data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> · <a href="https://www.openstreetmap.org/fixthemap">Report a map issue</a>.<br>Searches share your location with Overpass. Map tiles load from OpenStreetMap. Card artwork is illustrative. Selected venue photos load from Wikimedia Commons when linked and include attribution.</small></footer>
+  </main>
+  <dialog id="notes-dialog" aria-labelledby="notes-title">
+    <form id="notes-form"><h2 id="notes-title">Your study notes</h2><p id="notes-place"></p><p>Record what you know. Notes stay in this browser and power the study filters.</p>
+    <div id="notes-fields"></div><div class="nav-actions"><button type="button" id="notes-cancel" class="quiet-button">Cancel</button><button class="primary-button" type="submit">Save notes</button></div></form>
+  </dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+</body>
+</html>
