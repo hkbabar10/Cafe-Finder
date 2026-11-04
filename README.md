@@ -45,13 +45,13 @@ New presentation-only features:
 - Saved-only filter applies to the current results, not all previously saved locations
 - Wi-Fi filtering uses existing internet_access=wlan data
 - All six filters use locally saved study notes; Wi-Fi also uses recorded OSM wireless access
-- Unknown ratings, hours and Study Scores explicitly remain unavailable
-- Lazy loaded, local illustrative card artwork, not venue photos
+- Unknown ratings, hours, and Study Scores explicitly remain unavailable
+- Lazy-loaded, local illustrative card artwork, not venue photos
 - Skeletons while searching, small animations and reduced-motion support
 
 Files
-- index.html — semantic page and controls
-- styles.css — tokens, themes, responsive layout and motion
+- index.html - semantic page and controls
+- styles.css - tokens, themes, responsive layout and motion
 - ui.js — cards, favorites, themes and presentation preferences
 - app.js — existing search pipeline connected to the new UI
 - config.js — original OSM tile and Overpass endpoints
