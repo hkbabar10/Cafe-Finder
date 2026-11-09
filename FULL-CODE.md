@@ -8,10 +8,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="color-scheme" content="light dark">
-  <title>StudyCafe — A little space to focus</title>
+  <meta name="theme-color" content="#F7F5FB" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0B0814" media="(prefers-color-scheme: dark)">
+  <meta name="description" content="StudyCafe helps Western students find cafés around London, Ontario to study off campus.">
+  <title>StudyCafe — Off campus. On task.</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%234F2683'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23C4B0FF' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='2.5' fill='%23fff'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="./styles.css">
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -20,23 +24,28 @@
 <body>
   <a class="skip-link" href="#explore">Skip to results</a>
   <nav class="navigation" aria-label="Main navigation">
-    <a class="wordmark" href="#top"><span class="brand-icon" aria-hidden="true">sc.</span>StudyCafe<span class="brand-dot">.</span></a>
+    <a class="wordmark" href="#top"><span class="brand-icon" aria-hidden="true"></span>StudyCafe<span class="brand-tag">Western</span></a>
     <div class="nav-actions">
-      <button id="saved" class="quiet-button" type="button" aria-pressed="false">♡ <span>Saved</span> <span id="saved-count">0</span></button>
+      <button id="saved" class="quiet-button" type="button" aria-pressed="false"><span aria-hidden="true">♡</span> <span class="nav-label">Saved</span> <span id="saved-count">0</span></button>
       <button id="theme" class="icon-button" type="button" aria-label="Switch to dark mode" aria-pressed="false">☾</button>
     </div>
   </nav>
   <main id="top">
     <section class="hero" aria-labelledby="hero-title">
       <div class="hero-copy">
-        <p class="eyebrow"><span></span> A CHANGE OF SCENERY</p>
-        <h1 id="hero-title">A little coffee.<br>A little more <em>focus.</em></h1>
-        <p class="hero-description">Find a place nearby to settle in, open your laptop,<br class="desktop-break"> and make a little progress.</p>
+        <p class="eyebrow"><span class="pulse-dot" aria-hidden="true"></span>For Western students · London, ON</p>
+        <h1 id="hero-title">Off campus.<br>On <em>task.</em></h1>
+        <p class="hero-description">Weldon's full again. Find a café nearby, grab a seat with an outlet, and actually get through the readings.</p>
+        <dl class="hero-stats">
+          <div><dt>Radius</dt><dd>1–10 km</dd></div>
+          <div><dt>API keys</dt><dd>Zero</dd></div>
+          <div><dt>Tracking</dt><dd>None</dd></div>
+        </dl>
       </div>
-      <div class="hero-art" aria-hidden="true"><img src="./assets/cafe-scene.svg" width="480" height="340" alt=""><span>YOUR NEXT CHAPTER STARTS HERE</span></div>
+      <figure class="hero-art" aria-hidden="true"><img src="./assets/cafe-scene.svg" width="480" height="340" alt=""><figcaption>SCANNING · LONDON, ON</figcaption></figure>
     </section>
     <form id="search" class="search-bar" aria-label="Search nearby places">
-      <div class="location-field"><span class="location-symbol" aria-hidden="true">◎</span><div><span class="field-label">YOUR STARTING POINT</span><strong>Near my current location</strong><small>Location shared when you search</small></div></div>
+      <div class="location-field"><span class="location-symbol" aria-hidden="true"></span><div><span class="field-label">Starting point</span><strong>Near my current location</strong><small>Location is shared only when you search</small></div></div>
       <div class="distance-control">
         <label for="radius">Search distance <output id="radius-value" for="radius">2.5 km</output></label>
         <input type="range" id="radius" min="1" max="10" step="0.5" value="2.5" aria-valuetext="2.5 km" aria-describedby="radius-hint">
@@ -44,42 +53,53 @@
       </div>
       <button id="locate" class="primary-button" type="submit">Find my spot <span aria-hidden="true">↗</span></button>
     </form>
-    <div class="search-caption"><button id="choose-area" type="button" class="text-button">Choose an area on the map</button><small id="radius-hint">Adjust your distance, then search.</small><button id="demo" class="text-button" type="button">Just exploring? Try the demo →</button></div>
+    <div class="search-caption">
+      <div class="caption-actions">
+        <button id="from-campus" type="button" class="ghost-button">Search from campus</button>
+        <button id="choose-area" type="button" class="ghost-button">Pick an area on the map</button>
+        <button id="demo" class="ghost-button" type="button">Try the demo</button>
+      </div>
+      <small id="radius-hint">Set a distance, then search.</small>
+    </div>
     <section class="study-filters" aria-label="Study needs">
-      <span class="field-label">MAKE IT YOUR KIND OF PLACE</span>
+      <div class="filters-head"><span class="field-label">Study needs</span><button id="clear-needs" type="button" class="text-button">Clear</button></div>
       <div class="chips">
         <button type="button" class="chip" data-need="quiet" aria-pressed="false">Quiet</button>
         <button type="button" class="chip" id="wifi" data-need="wifi" aria-pressed="false">Wi-Fi</button>
-        <button type="button" class="chip" data-need="outlets" aria-pressed="false">Power outlets</button>
+        <button type="button" class="chip" data-need="outlets" aria-pressed="false">Outlets</button>
         <button type="button" class="chip" data-need="late" aria-pressed="false">Open late</button>
         <button type="button" class="chip" data-need="group" aria-pressed="false">Group-friendly</button>
         <button type="button" class="chip" data-need="pets" aria-pressed="false">Pet-friendly</button>
       </div>
-      <small class="filter-note">Filters match recorded Wi-Fi or your saved study notes. Unrecorded features are unknown. Add notes from a café card.</small>
-    <button id="clear-needs" type="button" class="text-button">Clear study filters</button></section>
+      <small class="filter-note">Filters use recorded Wi-Fi and your own study notes. Anything unrecorded stays unknown. Add notes from any card.</small>
+    </section>
     <section id="explore" aria-labelledby="results-title">
-      <div class="results-heading"><div><p class="eyebrow">YOUR NEXT STUDY SPOT</p><h2 id="results-title">Good places to begin.</h2></div>
+      <div class="results-heading"><div><p class="eyebrow">Results</p><h2 id="results-title">Your next study spot.</h2></div>
         <div class="view-switch" aria-label="Results view"><button type="button" data-view="split" aria-pressed="true">Split</button><button type="button" data-view="list" aria-pressed="false">List</button><button type="button" data-view="map" aria-pressed="false">Map</button></div>
       </div>
-      <div class="results-toolbar"><div class="type-filters" aria-label="Place type"><button type="button" data-filter="all" aria-pressed="true">All spots</button><button type="button" data-filter="cafe" aria-pressed="false">Cafés</button><button type="button" data-filter="restaurant" aria-pressed="false">Restaurants</button></div><span id="result-count">Ready to explore</span></div>
-      <p id="status" role="status">Find nearby places or try the demo. Results are ordered by distance.</p>
+      <div class="results-toolbar"><div class="type-filters" aria-label="Place type"><button type="button" data-filter="all" aria-pressed="true">All</button><button type="button" data-filter="cafe" aria-pressed="false">Cafés</button><button type="button" data-filter="restaurant" aria-pressed="false">Restaurants</button></div><span id="result-count">Ready</span></div>
+      <p id="status" role="status">Search near you, from campus, or try the demo. Results are ordered by distance.</p>
       <div class="layout" data-view="split">
         <div id="list-panel">
           <div id="skeletons" hidden aria-hidden="true"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
-          <ol id="results"><li class="empty-state"><span aria-hidden="true">◎</span><h3>Your next favorite spot is close.</h3><p>Search nearby to find cafés and restaurants, or explore with sample listings.</p></li></ol>
+          <ol id="results"><li class="empty-state"><span aria-hidden="true"></span><h3>Nothing scanned yet.</h3><p>Search to see cafés and restaurants around you or around campus.</p></li></ol>
         </div>
         <section id="map-panel" aria-label="Map and selected place">
-          <div id="map-placeholder"><span class="map-orbit" aria-hidden="true">◎</span><h3>A new perspective.</h3><p>Search with your location to explore<br>real places on the map.</p></div>
-          <div id="map" hidden></div><div id="area-controls" hidden><p>Drag or zoom the map to your area, then search its center. Initial view is Toronto, not your detected location.</p><button id="search-area" type="button" class="primary-button">Search this map area</button></div>
-          <div id="detail" aria-live="polite"><p class="detail-hint">Select a place to take a closer look.</p></div>
+          <div id="map-placeholder"><span class="map-orbit" aria-hidden="true"></span><h3>Map standby.</h3><p>Search to map spots around<br>you or around campus.</p></div>
+          <div id="map" hidden></div><div id="area-controls" hidden><p>Drag or zoom to the area you want, then search its centre. The map starts on Western's campus.</p><button id="search-area" type="button" class="primary-button">Search this area</button></div>
+          <div id="detail" aria-live="polite"><p class="detail-hint">Select a place to see details.</p></div>
         </section>
       </div>
     </section>
-    <footer><a class="wordmark" href="#top">StudyCafe.</a><p>A little space to do your best work.</p><small>Place data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> · <a href="https://www.openstreetmap.org/fixthemap">Report a map issue</a>.<br>Searches share your location with Overpass. Map tiles load from OpenStreetMap. Card artwork is illustrative. Selected venue photos load from Wikimedia Commons when linked and include attribution.</small></footer>
+    <footer>
+      <a class="wordmark" href="#top"><span class="brand-icon" aria-hidden="true"></span>StudyCafe</a>
+      <p>Built by a Western student, for Western students.</p>
+      <small>Independent student project, not affiliated with or endorsed by Western University.<br>Place data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> · <a href="https://www.openstreetmap.org/fixthemap">Report a map issue</a>. Searches share your location or the chosen point with Overpass. Map tiles load from OpenStreetMap. Venue photos load from Wikimedia Commons when linked and include attribution.</small>
+    </footer>
   </main>
   <dialog id="notes-dialog" aria-labelledby="notes-title">
-    <form id="notes-form"><h2 id="notes-title">Your study notes</h2><p id="notes-place"></p><p>Record what you know. Notes stay in this browser and power the study filters.</p>
-    <div id="notes-fields"></div><div class="nav-actions"><button type="button" id="notes-cancel" class="quiet-button">Cancel</button><button class="primary-button" type="submit">Save notes</button></div></form>
+    <form id="notes-form"><p class="eyebrow">Study notes</p><h2 id="notes-title">What's it like?</h2><p id="notes-place"></p><p class="dialog-note">Record what you know. Notes stay in this browser and power the study filters.</p>
+    <div id="notes-fields"></div><div class="dialog-actions"><button type="button" id="notes-cancel" class="quiet-button">Cancel</button><button class="primary-button" type="submit">Save notes</button></div></form>
   </dialog>
   <div id="toast" class="toast" role="status" hidden></div>
 </body>
@@ -90,190 +110,372 @@
 ## styles.css
 
 ```css
+/* StudyCafe — Western Edition
+   Minimal, purple, a little sci-fi. Every colour is a token; light and dark share one structure. */
+
 :root {
   color-scheme: light;
-  --background: #FAF6F0; --surface: #FFFFFF; --text: #2B1D14; --secondary: #7A6A5F;
-  --amber: #E58A2B; --sage: #5F8F6E; --teal: #1F6F78;
-  --sage-text: #365E43; --teal-text: #1F6F78; --border: #DDD0C3;
-  --tint: #F7F0E8; --sage-tint: #E9F0E8; --focus: #91500B;
-  --shadow: 0 4px 8px #2b1d1404, 0 16px 40px #2b1d1408;
-  --radius: 16px; --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-6: 24px; --space-8: 32px;
-  font: 16px/1.6 "DM Sans", system-ui, sans-serif;
+  --bg: #F7F5FB;
+  --surface: rgb(255 255 255 / .72);
+  --surface-solid: #FFFFFF;
+  --surface-sunken: #EFEBF7;
+  --text: #17112A;
+  --muted: #5E5873;
+  --border: #E2DCEF;
+  --border-strong: #CFC4E6;
+  --primary: #4F2683;
+  --on-primary: #FFFFFF;
+  --accent: #6D3FD1;
+  --accent-text: #5B2DB8;
+  --accent-soft: #EEE7FB;
+  --grad-a: #4F2683;
+  --grad-b: #8B3FD1;
+  --focus: #6D3FD1;
+  --glow: rgb(109 63 209 / .28);
+  --grid: rgb(79 38 131 / .055);
+  --halo: rgb(139 92 246 / .18);
+  --success: #1E7A4C;
+  --success-soft: #E3F4EA;
+  --shadow: 0 1px 2px rgb(23 17 42 / .04), 0 12px 32px rgb(23 17 42 / .06);
+  --radius: 14px;
+  --radius-sm: 10px;
+  --font: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  font: 16px/1.6 var(--font);
 }
+
 :root[data-theme="dark"] {
-  color-scheme: dark; --background: #1B1410; --surface: #2A211B; --text: #FAF6F0;
-  --secondary: #C3B4A5; --border: #68564A; --tint: #362A21; --sage-tint: #253B2B;
-  --sage-text: #AED5B6; --teal-text: #85D0D5; --focus: #F4B46F;
-  --shadow: 0 8px 32px #0003;
+  color-scheme: dark;
+  --bg: #0B0814;
+  --surface: rgb(22 16 38 / .66);
+  --surface-solid: #151025;
+  --surface-sunken: #110C1F;
+  --text: #F1ECFF;
+  --muted: #A79DC2;
+  --border: #2A2140;
+  --border-strong: #3D3160;
+  --primary: #A78BFA;
+  --on-primary: #0B0814;
+  --accent: #A78BFA;
+  --accent-text: #C4B0FF;
+  --accent-soft: #221840;
+  --grad-a: #C4B0FF;
+  --grad-b: #8B6CFF;
+  --focus: #C4B0FF;
+  --glow: rgb(167 139 250 / .3);
+  --grid: rgb(167 139 250 / .06);
+  --halo: rgb(124 77 255 / .22);
+  --success: #7FDCA8;
+  --success-soft: #142A20;
+  --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 16px 40px rgb(0 0 0 / .35);
 }
-* { box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 100px; }
-body { margin: 0; color: var(--text); background: var(--background); }
-button, input { font: inherit; }
-button, a, input { -webkit-tap-highlight-color: transparent; }
-button { cursor: pointer; min-height: 44px; color: var(--text); }
-button:disabled { cursor: not-allowed; }
-button, a, .cafe-card, .search-bar { transition: background 180ms ease-out, color 180ms ease-out, box-shadow 180ms ease-out, transform 180ms ease-out; }
+
+/* ---------- Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 96px; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  background:
+    radial-gradient(900px 520px at 85% -8%, var(--halo), transparent 65%),
+    radial-gradient(700px 400px at -10% 30%, var(--halo), transparent 60%),
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / 44px 44px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / 44px 44px,
+    var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; min-height: 44px; -webkit-tap-highlight-color: transparent; }
+button:disabled { cursor: not-allowed; opacity: .55; }
+button, a, .cafe-card, .search-bar, .chip { transition: background-color 180ms var(--ease), color 180ms var(--ease), border-color 180ms var(--ease), box-shadow 180ms var(--ease), transform 180ms var(--ease); }
 button:active:not(:disabled) { transform: scale(.97); }
-button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
-a { color: var(--teal-text); text-underline-offset: 4px; }
+:is(button, a, input, select):focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+a { color: var(--accent-text); text-underline-offset: 3px; }
 [hidden] { display: none !important; }
 h1, h2, h3, p { margin: 0; }
-h1, h2, h3 { line-height: 1.15; }
-h1, h2 { font-family: Fraunces, Georgia, serif; font-weight: 500; }
+h1, h2, h3 { line-height: 1.08; font-weight: 600; letter-spacing: -.03em; }
 small { font-size: .8rem; }
-.navigation { position: sticky; top: 0; z-index: 1000; padding: 20px max(24px, calc((100vw - 1200px)/2)); display: flex; align-items: center; justify-content: space-between; gap: 16px; background: var(--background); border-bottom: 1px solid var(--border); transition: padding 200ms ease-out; }
-.navigation.compact { padding-top: 8px; padding-bottom: 8px; box-shadow: var(--shadow); }
-.wordmark { display: inline-flex; align-items: center; font-weight: 700; font-size: 1.25rem; text-decoration: none; color: var(--text); white-space: nowrap; }
-.brand-dot { color: var(--focus); }
-.brand-icon { display: grid; place-items: center; margin-right: 10px; width: 36px; height: 36px; background: var(--amber); color: #2B1D14; border-radius: 12px; font-family: Georgia, serif; }
-.nav-actions { display: flex; gap: 12px; }
-.icon-button, .quiet-button { border: 1px solid var(--border); border-radius: 12px; background: var(--surface); padding: 8px 12px; }
-.icon-button { width: 44px; }
-#saved[aria-pressed="true"] { background: var(--sage-tint); color: var(--sage-text); }
-#saved-count { display: inline-block; min-width: 20px; font-size: .75rem; }
-main { max-width: 1248px; padding: 0 24px; margin: auto; }
-.hero { display: grid; grid-template-columns: 1.3fr 1fr; align-items: center; gap: 32px; padding: 56px 0 40px; }
-.eyebrow, .field-label { font-size: .72rem; font-weight: 700; letter-spacing: .12em; color: var(--secondary); }
-.eyebrow span { display: inline-block; width: 7px; height: 7px; margin-right: 8px; background: var(--sage); border-radius: 50%; }
-h1 { font-size: clamp(2.5rem, 4.8vw, 4.4rem); letter-spacing: -.045em; margin: 16px 0 20px; }
-h1 em { color: var(--teal-text); font-weight: 400; }
-.hero-description { color: var(--secondary); max-width: 470px; }
-.hero-art { transform: rotate(2deg); }
-.hero-art img { width: 100%; height: auto; border-radius: 32px; }
-.hero-art span { display: block; text-align: center; margin-top: 8px; font-size: .72rem; letter-spacing: .18em; color: var(--secondary); }
-.search-bar { display: grid; grid-template-columns: 1.2fr 1fr auto; gap: 24px; padding: 20px 24px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); align-items: center; }
-.search-bar:focus-within { box-shadow: 0 0 0 4px color-mix(in srgb, var(--amber) 20%, transparent), var(--shadow); border-color: var(--focus); }
-.location-field { display: flex; gap: 16px; align-items: center; }
-.location-symbol { font-size: 2rem; color: var(--teal-text); }
-.location-field span.field-label, .location-field strong, .location-field small { display: block; }
-.location-field small { color: var(--secondary); }
-.distance-control { border-left: 1px solid var(--border); padding-left: 24px; }
-.distance-control label { display: flex; justify-content: space-between; font-size: .8rem; font-weight: 600; }
-.distance-control output { color: var(--teal-text); font-variant-numeric: tabular-nums; }
-#radius { display: block; width: 100%; height: 24px; min-height: 44px; margin: 0; accent-color: var(--focus); }
-.range-ends { display: flex; justify-content: space-between; font-size: .72rem; color: var(--secondary); }
-.primary-button { background: var(--amber); color: #2B1D14; border: 0; padding: 14px 24px; border-radius: 12px; font-weight: 700; }
-.primary-button span { margin-left: 16px; }
-.primary-button:hover { box-shadow: 0 4px 16px #e58a2b40; transform: translateY(-2px); }
-.text-button { border: 0; background: transparent; color: var(--teal-text); text-decoration: underline; text-underline-offset: 4px; padding: 4px 0; }
-.search-caption { display: flex; align-items: center; justify-content: space-between; gap: 16px; color: var(--secondary); }
-.search-caption button { font-size: .8rem; }
-.study-filters { padding: 24px 0 32px; }
-.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 8px; }
-.chip { padding: 8px 18px; border-radius: 99px; background: var(--surface); border: 1px solid var(--border); font-size: .85rem; }
-.chip[aria-pressed="true"] { color: var(--sage-text); background: var(--sage-tint); border-color: var(--sage-text); }
-.chip:disabled { color: var(--secondary); background: var(--tint); border-style: dashed; }
-.filter-note { display: block; color: var(--secondary); }
-.results-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 24px; border-top: 1px solid var(--border); }
-.results-heading h2 { font-size: 2rem; margin-top: 8px; letter-spacing: -.035em; }
-.view-switch { display: flex; padding: 4px; border-radius: 12px; background: var(--tint); }
-.view-switch button { border: 0; background: transparent; padding: 6px 14px; border-radius: 8px; font-size: .85rem; }
-.view-switch button[aria-pressed="true"] { background: var(--surface); box-shadow: var(--shadow); }
-.results-toolbar { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-top: 24px; }
-.type-filters { display: flex; gap: 4px; flex-wrap: wrap; }
-.type-filters button { background: transparent; border: 0; padding: 8px 14px; border-radius: 12px; }
-.type-filters button[aria-pressed="true"] { background: var(--text); color: var(--background); }
-#result-count { font-size: .75rem; color: var(--secondary); }
-#status { color: var(--secondary); font-size: .8rem; padding: 12px 0 20px; min-height: 52px; }
-.layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
-.layout[data-view="list"] { grid-template-columns: 1fr; }
+::selection { background: var(--accent); color: var(--on-primary); }
+
+.eyebrow, .field-label, .card-kicker, #result-count, .tag, .score, .range-ends, .hero-art figcaption, .venue-facts dt, .brand-tag, .hero-stats dt, .card-index {
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+.eyebrow, .field-label { font-size: .7rem; font-weight: 500; color: var(--muted); }
+.eyebrow { display: inline-flex; align-items: center; gap: 10px; }
+
+/* ---------- Navigation ---------- */
+.navigation {
+  position: sticky; top: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 18px max(24px, calc((100vw - 1200px) / 2));
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border-bottom: 1px solid transparent;
+  transition: padding 200ms var(--ease), border-color 200ms var(--ease);
+}
+.navigation.compact { padding-top: 10px; padding-bottom: 10px; border-bottom-color: var(--border); }
+.wordmark { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.15rem; letter-spacing: -.02em; color: var(--text); text-decoration: none; white-space: nowrap; }
+.brand-icon {
+  position: relative; width: 30px; height: 30px; border-radius: 9px;
+  background: linear-gradient(140deg, var(--grad-a), var(--grad-b));
+  box-shadow: 0 0 0 1px var(--border-strong), 0 6px 18px var(--glow);
+}
+.brand-icon::before { content: ""; position: absolute; inset: 8px; border-radius: 50%; border: 2px solid rgb(255 255 255 / .85); }
+.brand-icon::after { content: ""; position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; margin: -2px; border-radius: 50%; background: #fff; }
+.brand-tag { font-size: .62rem; font-weight: 500; color: var(--accent-text); border: 1px solid var(--border-strong); border-radius: 999px; padding: 2px 8px; }
+.nav-actions { display: flex; gap: 8px; }
+.icon-button, .quiet-button {
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface); padding: 8px 14px;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.icon-button { width: 44px; padding: 0; }
+.icon-button:hover, .quiet-button:hover { border-color: var(--border-strong); }
+#saved[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-text); }
+#saved-count { display: inline-grid; place-items: center; min-width: 22px; height: 22px; margin-left: 4px; padding: 0 6px; border-radius: 999px; background: var(--surface-sunken); font-family: var(--mono); font-size: .72rem; font-variant-numeric: tabular-nums; }
+
+/* ---------- Layout ---------- */
+main { max-width: 1248px; margin: auto; padding: 0 24px; }
+
+/* ---------- Hero ---------- */
+.hero { display: grid; grid-template-columns: 1.15fr 1fr; align-items: center; gap: 48px; padding: 72px 0 48px; }
+.pulse-dot { position: relative; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.pulse-dot::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 1px solid var(--accent); animation: ping 2.4s var(--ease) infinite; }
+h1 { font-size: clamp(3rem, 7vw, 5.6rem); letter-spacing: -.055em; margin: 20px 0 22px; }
+h1 em {
+  font-style: normal;
+  background: linear-gradient(95deg, var(--grad-a), var(--grad-b));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.hero-description { color: var(--muted); max-width: 30rem; font-size: 1.08rem; }
+.hero-stats { display: flex; gap: 32px; margin: 32px 0 0; padding-top: 20px; border-top: 1px solid var(--border); }
+.hero-stats dt { font-size: .64rem; color: var(--muted); }
+.hero-stats dd { margin: 2px 0 0; font-weight: 600; font-size: 1.05rem; }
+.hero-art { margin: 0; position: relative; }
+.hero-art::before { content: ""; position: absolute; inset: 10% 8%; border-radius: 40%; background: var(--glow); filter: blur(60px); z-index: -1; }
+.hero-art img { display: block; width: 100%; height: auto; border-radius: 24px; border: 1px solid var(--border-strong); box-shadow: var(--shadow); }
+.hero-art figcaption { margin-top: 12px; font-size: .64rem; color: var(--muted); text-align: right; }
+
+/* ---------- Search ---------- */
+.search-bar {
+  display: grid; grid-template-columns: 1.2fr 1fr auto; align-items: center; gap: 24px;
+  padding: 18px 18px 18px 24px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.search-bar:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px var(--glow), var(--shadow); }
+.location-field { display: flex; align-items: center; gap: 16px; }
+.location-symbol { flex-shrink: 0; position: relative; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border-strong); background: var(--accent-soft); }
+.location-symbol::before { content: ""; position: absolute; inset: 11px; border-radius: 50%; border: 2px solid var(--accent); }
+.location-symbol::after { content: ""; position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px; border-radius: 50%; background: var(--accent); }
+.location-field :is(.field-label, strong, small) { display: block; }
+.location-field strong { font-weight: 600; }
+.location-field small { color: var(--muted); }
+.distance-control { padding-left: 24px; border-left: 1px solid var(--border); }
+.distance-control label { display: flex; justify-content: space-between; font-size: .82rem; font-weight: 500; }
+.distance-control output { font-family: var(--mono); color: var(--accent-text); font-variant-numeric: tabular-nums; }
+#radius { display: block; width: 100%; min-height: 36px; margin: 0; accent-color: var(--accent); }
+.range-ends { display: flex; justify-content: space-between; font-size: .62rem; color: var(--muted); }
+
+.primary-button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 12px;
+  border: 0; border-radius: 12px; padding: 14px 24px;
+  background: var(--primary); color: var(--on-primary); font-weight: 600;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / .08) inset, 0 8px 24px var(--glow);
+}
+.primary-button:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 0 0 1px rgb(255 255 255 / .12) inset, 0 12px 32px var(--glow); }
+.ghost-button { border: 1px solid var(--border); border-radius: 999px; background: transparent; padding: 6px 14px; font-size: .82rem; color: var(--muted); }
+.ghost-button:hover { color: var(--accent-text); border-color: var(--accent); }
+.text-button { border: 0; background: transparent; padding: 4px 0; color: var(--accent-text); text-decoration: underline; text-underline-offset: 3px; font-size: .85rem; }
+
+.search-caption { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding-top: 14px; }
+.caption-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+#radius-hint { color: var(--muted); }
+
+/* ---------- Study filters ---------- */
+.study-filters { padding: 32px 0 40px; }
+.filters-head { display: flex; align-items: center; justify-content: space-between; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 10px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); font-size: .88rem; }
+.chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; border: 1px solid var(--muted); transition: inherit; }
+.chip:hover { border-color: var(--border-strong); }
+.chip[aria-pressed="true"] { color: var(--accent-text); background: var(--accent-soft); border-color: var(--accent); }
+.chip[aria-pressed="true"]::before { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 8px var(--accent); }
+.filter-note { display: block; color: var(--muted); }
+
+/* ---------- Results ---------- */
+.results-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding-top: 32px; border-top: 1px solid var(--border); }
+.results-heading h2 { font-size: clamp(1.8rem, 3.5vw, 2.4rem); margin-top: 8px; }
+.view-switch, .type-filters { display: flex; gap: 2px; padding: 4px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-sunken); }
+.view-switch button, .type-filters button { min-height: 36px; border: 0; border-radius: 8px; background: transparent; padding: 4px 14px; font-size: .85rem; color: var(--muted); }
+.view-switch button:hover, .type-filters button:hover { color: var(--text); }
+.view-switch button[aria-pressed="true"], .type-filters button[aria-pressed="true"] { background: var(--surface-solid); color: var(--text); box-shadow: 0 1px 3px rgb(0 0 0 / .12), 0 0 0 1px var(--border); }
+.results-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 20px; }
+#result-count { font-size: .68rem; color: var(--muted); }
+#status { min-height: 52px; padding: 14px 0 18px; font-family: var(--mono); font-size: .78rem; color: var(--muted); }
+#status::before { content: "> "; color: var(--accent-text); }
+
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.layout[data-view="list"], .layout[data-view="map"] { grid-template-columns: 1fr; }
 .layout[data-view="list"] #map-panel, .layout[data-view="map"] #list-panel { display: none; }
-.layout[data-view="map"] { grid-template-columns: 1fr; }
-#results { list-style: none; padding: 0; margin: 0; display: grid; gap: 16px; }
-.layout[data-view="list"] #results { grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr)); }
-.cafe-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
-.cafe-card:hover, .cafe-card.highlight { transform: translateY(-3px); box-shadow: 0 8px 24px #e58a2b24; border-color: var(--focus); }
-.cafe-card.selected { border-color: var(--sage-text); }
-.card-top { display: flex; gap: 16px; align-items: flex-start; }
-.card-image { width: 112px; height: 100px; object-fit: cover; border-radius: 12px; background: var(--tint); }
+#results { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.layout[data-view="list"] #results { grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); }
+
+/* ---------- Cards ---------- */
+.cafe-card {
+  position: relative; padding: 18px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.cafe-card:hover, .cafe-card.highlight { border-color: var(--border-strong); transform: translateY(-2px); box-shadow: 0 12px 32px var(--glow); }
+.cafe-card.selected { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent), 0 0 0 3px var(--accent-soft); }
+.card-top { display: flex; align-items: flex-start; gap: 14px; }
+.card-index {
+  flex-shrink: 0; display: grid; place-items: center; width: 44px; height: 44px;
+  border-radius: 12px; border: 1px solid var(--border-strong); background: var(--surface-sunken);
+  font-size: .8rem; font-weight: 500; letter-spacing: .02em; color: var(--accent-text);
+}
+.cafe-card.selected .card-index { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
 .card-main { flex: 1; min-width: 0; }
-.card-kicker { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--secondary); }
-.card-select { display: block; font-size: 1.1rem; line-height: 1.3; font-weight: 700; padding: 4px 0; text-align: left; background: transparent; border: 0; overflow-wrap: anywhere; }
-.card-meta, .card-address { font-size: .75rem; color: var(--secondary); }
-.card-address { margin-top: 6px; }
-.favorite { flex-shrink: 0; width: 44px; height: 44px; border: 1px solid var(--border); background: var(--surface); border-radius: 50%; color: var(--teal-text); font-size: 1.5rem; line-height: 1; }
-.favorite[aria-pressed="true"] { background: var(--teal); color: white; }
-.favorite.pulse { animation: heart 240ms ease-out; }
-.card-bottom { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--border); margin-top: 16px; padding-top: 12px; }
-.tag { color: var(--sage-text); background: var(--sage-tint); padding: 4px 8px; border-radius: 6px; font-size: .7rem; }
-.tag.unknown { color: var(--secondary); background: var(--tint); }
-.score { display: flex; align-items: center; gap: 8px; font-size: .7rem; color: var(--secondary); }
-.score-ring { display: grid; place-items: center; width: 32px; height: 32px; border: 3px solid var(--border); border-radius: 50%; color: var(--secondary); }
-#map-panel { position: sticky; top: 88px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
-#map, #map-placeholder { height: 400px; }
-#map-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: var(--tint); padding: 24px; }
-.map-orbit { width: 96px; height: 96px; border: 1px solid var(--border); border-radius: 50%; font-size: 3.5rem; color: var(--teal-text); margin-bottom: 24px; }
-#map-placeholder p { margin-top: 12px; font-size: .9rem; color: var(--secondary); }
-#detail { padding: 24px; }
-#detail h2 { font-size: 1.4rem; margin-bottom: 12px; }
-#detail p { font-size: .85rem; margin-bottom: 8px; }
-#detail small { display: block; color: var(--secondary); }
-#detail a { display: inline-block; min-height: 44px; margin-top: 12px; font-size: .85rem; font-weight: 700; }
-.detail-hint { color: var(--secondary); }
+.card-kicker { font-size: .62rem; color: var(--muted); }
+.card-select { display: block; min-height: 0; padding: 2px 0 4px; border: 0; background: transparent; text-align: left; font-size: 1.12rem; font-weight: 600; line-height: 1.3; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.card-select:hover { color: var(--accent-text); }
+.card-meta, .card-address { font-size: .8rem; color: var(--muted); }
+.card-meta { font-family: var(--mono); font-size: .72rem; }
+.card-address { margin-top: 2px; }
+.favorite { flex-shrink: 0; width: 44px; height: 44px; border: 1px solid var(--border); border-radius: 50%; background: transparent; font-size: 1.25rem; line-height: 1; color: var(--muted); }
+.favorite:hover { color: var(--accent-text); border-color: var(--accent); }
+.favorite[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: var(--on-primary); box-shadow: 0 0 16px var(--glow); }
+.favorite.pulse { animation: pop 260ms var(--ease); }
+.card-bottom { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--border); }
+.tag { padding: 3px 8px; border-radius: 6px; font-size: .6rem; color: var(--success); background: var(--success-soft); }
+.tag.unknown { color: var(--muted); background: var(--surface-sunken); }
+.score { display: flex; align-items: center; gap: 8px; margin-left: auto; font-size: .6rem; color: var(--muted); }
+.score-ring { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; border: 2px dashed var(--border-strong); }
+.cafe-card > .text-button { margin-top: 8px; font-size: .8rem; }
+
+/* ---------- Map + detail ---------- */
+#map-panel { position: sticky; top: 84px; overflow: hidden; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+#map, #map-placeholder { height: 420px; }
+#map-placeholder {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center;
+  background:
+    radial-gradient(circle at center, var(--accent-soft) 0, transparent 60%),
+    repeating-radial-gradient(circle at center, transparent 0 38px, var(--grid) 38px 39px),
+    var(--surface-sunken);
+}
+#map-placeholder h3 { font-size: 1.3rem; }
+#map-placeholder p { margin-top: 10px; font-size: .9rem; color: var(--muted); }
+.map-orbit { position: relative; width: 88px; height: 88px; margin-bottom: 24px; border-radius: 50%; border: 1px solid var(--border-strong); }
+.map-orbit::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 0deg, var(--glow), transparent 30%); animation: spin 3.6s linear infinite; }
+.map-orbit::after { content: ""; position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 16px var(--accent); }
+#area-controls { padding: 16px; background: var(--surface-sunken); border-top: 1px solid var(--border); }
+#area-controls p { margin-bottom: 12px; font-size: .82rem; color: var(--muted); }
+#detail { padding: 24px; border-top: 1px solid var(--border); }
+#detail h2 { margin-bottom: 10px; font-size: 1.5rem; }
+#detail p { margin-bottom: 6px; font-size: .88rem; }
+#detail small { display: block; color: var(--muted); }
+#detail > a { display: inline-flex; align-items: center; min-height: 44px; margin-top: 8px; font-size: .88rem; font-weight: 600; }
+.detail-hint { color: var(--muted); }
+
+.venue-facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px 20px; margin: 16px 0; padding: 16px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.venue-facts dt { font-size: .62rem; color: var(--muted); padding-top: 3px; }
+.venue-facts dd { margin: 0; font-size: .86rem; overflow-wrap: anywhere; white-space: pre-wrap; }
+#detail .venue-facts a { margin: 0; }
+.venue-photo { margin: 20px 0 0; }
+.venue-photo img { width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.venue-photo figcaption { margin-top: 6px; font-size: .74rem; color: var(--muted); overflow-wrap: anywhere; }
+#detail .venue-photo a { font-size: inherit; }
+
+/* Leaflet */
+.leaflet-container { font-family: var(--font); background: var(--surface-sunken); }
+:root[data-theme="dark"] .leaflet-tile-pane { filter: invert(1) hue-rotate(200deg) brightness(.92) contrast(.9) saturate(.55); }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #FFFFFF; color: #17112A; }
+.leaflet-popup-content-wrapper { border-radius: 10px; font-weight: 600; }
+.leaflet-control-attribution { background: rgb(255 255 255 / .9) !important; color: #17112A; }
+.leaflet-control-attribution a { color: #4F2683; }
+.leaflet-control-zoom a { width: 44px !important; height: 44px !important; line-height: 44px !important; }
 .study-pin { border: 0; background: transparent; }
-.study-pin span { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50% 50% 50% 8px; background: #1F6F78; color: white; border: 3px solid white; box-shadow: 0 4px 12px #0003; font-size: 13px; font-weight: 700; transition: transform 180ms ease-out; }
-.study-pin.highlight span { background: #E58A2B; color: #2B1D14; transform: translateY(-5px) scale(1.1); }
-.leaflet-container { font-family: "DM Sans", system-ui, sans-serif; }
-.leaflet-popup-content-wrapper { color: #2B1D14; background: white; }
-.leaflet-control-attribution { color: #2B1D14; background: white !important; }
-.leaflet-control-attribution a { color: #1F6F78; }
-.leaflet-control-zoom a { min-width: 44px; min-height: 44px; line-height: 44px; }
-.empty-state { padding: 48px 24px; text-align: center; border: 1px dashed var(--border); border-radius: var(--radius); }
-.empty-state > span { display: block; color: var(--teal-text); font-size: 2rem; margin-bottom: 16px; }
-.empty-state p { color: var(--secondary); font-size: .9rem; margin-top: 12px; }
-.skeleton { height: 200px; background: linear-gradient(100deg, var(--tint) 30%, var(--surface) 50%, var(--tint) 70%); background-size: 200% 100%; border-radius: var(--radius); margin-bottom: 16px; animation: shimmer 1.3s ease-in-out infinite; }
-footer { border-top: 1px solid var(--border); margin-top: 64px; padding: 32px 0; }
-footer p { color: var(--secondary); margin: 8px 0 20px; font-size: .85rem; }
-footer small { color: var(--secondary); }
-.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--background); border-radius: 12px; padding: 12px 24px; box-shadow: var(--shadow); z-index: 1100; max-width: calc(100% - 32px); }
-.skip-link { position: absolute; top: -100px; left: 16px; z-index: 1200; background: var(--surface); padding: 12px; }
+.study-pin span {
+  position: relative; display: grid; place-items: center; width: 34px; height: 34px; margin: 0 auto;
+  border-radius: 50%; background: #4F2683; border: 2px solid #FFFFFF;
+  box-shadow: 0 0 0 4px rgb(79 38 131 / .22), 0 6px 16px rgb(79 38 131 / .45);
+  color: #FFFFFF; font: 600 12px/1 var(--mono);
+  transform-origin: 50% 100%;
+  transition: transform 180ms var(--ease), background-color 180ms var(--ease);
+}
+.study-pin span::after { content: ""; position: absolute; left: 50%; bottom: -9px; margin-left: -5px; border: 5px solid transparent; border-top-color: #FFFFFF; }
+.study-pin.highlight span { background: #A78BFA; color: #0B0814; transform: translateY(-4px) scale(1.12); }
+
+/* ---------- States ---------- */
+.empty-state { padding: 56px 24px; text-align: center; border: 1px dashed var(--border-strong); border-radius: var(--radius); background: var(--surface); }
+.empty-state > span { display: block; width: 44px; height: 44px; margin: 0 auto 18px; border-radius: 50%; border: 1px solid var(--border-strong); background: radial-gradient(circle, var(--accent) 0 4px, transparent 5px); }
+.empty-state h3 { font-size: 1.2rem; }
+.empty-state p { margin-top: 10px; font-size: .9rem; color: var(--muted); }
+.skeleton { position: relative; overflow: hidden; height: 148px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-sunken); }
+.skeleton::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, var(--glow), transparent); animation: sweep 1.4s var(--ease) infinite; }
+
+/* ---------- Dialog + toast ---------- */
+#notes-dialog { width: min(480px, calc(100% - 32px)); max-height: 85vh; overflow: auto; padding: 28px; color: var(--text); background: var(--surface-solid); border: 1px solid var(--border-strong); border-radius: 18px; box-shadow: 0 24px 80px rgb(0 0 0 / .35); }
+#notes-dialog::backdrop { background: rgb(11 8 20 / .55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+#notes-dialog h2 { margin-top: 8px; font-size: 1.6rem; }
+#notes-place { margin-top: 4px; font-weight: 600; color: var(--accent-text); }
+.dialog-note { margin: 12px 0 8px; font-size: .86rem; color: var(--muted); }
+#notes-fields label { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+#notes-fields select { min-height: 40px; padding: 6px 10px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface-sunken); }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+.toast { position: fixed; bottom: 24px; left: 50%; z-index: 1100; max-width: calc(100% - 32px); transform: translateX(-50%); padding: 12px 20px; border: 1px solid var(--border-strong); border-radius: 999px; background: var(--surface-solid); color: var(--text); box-shadow: 0 12px 40px var(--glow); font-size: .9rem; }
+.skip-link { position: absolute; top: -100px; left: 16px; z-index: 1200; padding: 12px 16px; border-radius: 10px; background: var(--primary); color: var(--on-primary); }
 .skip-link:focus { top: 12px; }
-.reveal { animation: reveal 240ms ease-out; }
-@keyframes reveal { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes heart { 50% { transform: scale(1.15); } }
-@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* ---------- Footer ---------- */
+footer { margin-top: 80px; padding: 32px 0 48px; border-top: 1px solid var(--border); }
+footer p { margin: 10px 0 16px; font-size: .9rem; color: var(--muted); }
+footer small { display: block; max-width: 60rem; color: var(--muted); line-height: 1.7; }
+
+/* ---------- Motion ---------- */
+.reveal { animation: rise 320ms var(--ease) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes pop { 50% { transform: scale(1.18); } }
+@keyframes sweep { to { transform: translateX(100%); } }
+@keyframes spin { to { transform: rotate(1turn); } }
+@keyframes ping { 0% { transform: scale(.6); opacity: 1; } 80%, 100% { transform: scale(2.2); opacity: 0; } }
+
+/* ---------- Responsive ---------- */
 @media (max-width: 900px) {
-  .hero { gap: 24px; } .search-bar { grid-template-columns: 1fr 1fr; } .primary-button { grid-column: 1 / -1; }
-  .layout { grid-template-columns: 1fr; } #map-panel { position: static; } .card-image { width: 100px; }
-  .hero-art span { letter-spacing: .08em; }
+  .hero { grid-template-columns: 1fr; gap: 32px; padding-top: 48px; }
+  .hero-art { max-width: 520px; }
+  .search-bar { grid-template-columns: 1fr 1fr; }
+  .search-bar .primary-button { grid-column: 1 / -1; }
+  .layout { grid-template-columns: 1fr; }
+  #map-panel { position: static; }
 }
 @media (max-width: 560px) {
-  main { padding: 0 16px; } .navigation { padding: 12px 16px; } .nav-actions { gap: 6px; }
-  .hero { grid-template-columns: 1fr; padding: 32px 0; } .hero-art { display: none; }
-  h1 { font-size: 2.7rem; } .desktop-break { display: none; }
-  .search-bar { grid-template-columns: 1fr; gap: 16px; padding: 20px; }
+  main { padding: 0 16px; }
+  .navigation { padding: 12px 16px; }
+  .brand-tag { display: none; }
+  .nav-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .hero { padding: 32px 0 24px; }
+  .hero-art { display: none; }
+  .hero-stats { gap: 20px; }
+  .search-bar { grid-template-columns: 1fr; gap: 16px; padding: 18px; }
   .distance-control { padding: 16px 0 0; border-left: 0; border-top: 1px solid var(--border); }
-  .search-caption { flex-wrap: wrap; gap: 0; padding-top: 12px; }
-  .results-heading { align-items: flex-start; flex-direction: column; }
-  .results-toolbar { align-items: flex-start; flex-direction: column; gap: 8px; }
-  .card-top { gap: 10px; flex-wrap: wrap; } .card-image { width: 76px; height: 88px; }
-  .favorite { width: 44px; } .card-main { min-width: 100px; }
-  .card-select { font-size: 1rem; } #map, #map-placeholder { height: 320px; }
-  .wordmark { font-size: 1.05rem; } .brand-icon { margin-right: 6px; }
+  .results-heading, .results-toolbar { flex-direction: column; align-items: flex-start; }
+  .card-top { flex-wrap: wrap; }
+  .score { margin-left: 0; }
+  #map, #map-placeholder { height: 320px; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
-
-#area-controls { padding: 16px; background: var(--tint); }
-#area-controls p { font-size: .8rem; margin-bottom: 12px; }
-#notes-dialog { width: min(520px, calc(100% - 32px)); max-height: 85vh; overflow: auto; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
-#notes-dialog::backdrop { background: #1b141077; }
-#notes-dialog p { margin: 12px 0; }
-#notes-fields label { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 12px 0; }
-#notes-fields select { min-height: 44px; padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; }
-#notes-fields select:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
-
-.venue-facts { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 12px 16px; padding: 16px 0; border-top: 1px solid var(--border); }
-.venue-facts dt { font-weight: 700; font-size: .8rem; }
-.venue-facts dd { margin: 0; font-size: .8rem; overflow-wrap: anywhere; white-space: pre-wrap; }
-#detail .venue-facts a { margin: 0; font-size: .8rem; }
-.venue-photo { margin: 20px 0 0; }
-.venue-photo img { width: 100%; height: auto; border-radius: 12px; }
-.venue-photo figcaption { color: var(--secondary); font-size: .75rem; overflow-wrap: anywhere; }
-#detail .venue-photo a { font-size: inherit; min-height: 44px; }
 
 ```
 
@@ -281,7 +483,7 @@ footer small { color: var(--secondary); }
 
 ```javascript
 import { renderExtraDetails } from './details.js';
-import { TILE_URL, OVERPASS_URL } from './config.js';
+import { TILE_URL, OVERPASS_URL, CAMPUS } from './config.js';
 import { initializeUI, matchesPreferences, createCard, beforeRender, showCount, setBusy } from './ui.js';
 
 const get = (id) => document.getElementById(id);
@@ -295,6 +497,7 @@ let cachedSearch;
 let filter = 'all';
 let activeName;
 let demoMode = false;
+const CONTROLS = ['locate', 'demo', 'radius', 'choose-area', 'search-area', 'from-campus'];
 
 function locate() {
   return new Promise((resolve, reject) => {
@@ -362,14 +565,14 @@ function render() {
   if (!selected) {
     const empty = addText(results, 'li', '', 'empty-state');
     empty.className = 'empty-state';
-    addText(empty, 'h3', 'A little room to explore.');
+    addText(empty, 'h3', 'No matches.');
     addText(empty, 'p', 'No matching places. Try another type, clear study filters or turn off Saved, or search a wider area. Saved places are shown within the current search results.');
     addText(get('detail'), 'p', 'No place selected.');
     return;
   }
   addText(get('detail'), 'h2', selected.name);
   addText(get('detail'), 'p', selected.address);
-  addText(get('detail'), 'p', selected.distance.toFixed(2) + ' km away · straight-line estimate');
+  addText(get('detail'), 'p', selected.distance.toFixed(2) + ' km away' + (Number.isFinite(selected.campusDistance) ? ' · ' + selected.campusDistance.toFixed(1) + ' km from Western campus' : '') + ' · straight-line');
   addText(get('detail'), 'p', 'Internet access · ' + (selected.internet ?? 'Not recorded'));
   addText(get('detail'), 'small', 'Noise levels, outlets and study suitability are unverified.');
   renderExtraDetails(get('detail'), selected);
@@ -403,16 +606,18 @@ function showDemo() {
   get('area-controls').hidden = true;
   get('map').hidden = true;
   get('map-placeholder').hidden = false;
-  get('map-placeholder').textContent = 'Demo listings are fictional. Use your location to explore the live map.';
+  get('map-placeholder').textContent = 'Demo listings are fictional. Search near you or from campus to see the live map.';
   const radiusKm = Number(get('radius').value);
   cafes = [
-    { types: ['cafe'], name: 'Blue Hour Coffee', address: 'Demo café · Riverside', rating: 4.8, reviews: 87, distance: 0.65 },
-    { types: ['cafe'], name: 'Margin Notes Café', address: 'Demo café · Market District', rating: 4.6, reviews: 231, distance: 0.32 },
-    { types: ['restaurant'], name: 'The Study Table', address: 'Demo café · North End', rating: 5, reviews: 3, distance: 1.14 },
-    { types: ['cafe'], name: 'Chapter Coffee', address: 'Demo café · West End', rating: 4.7, reviews: 52, distance: 3.5 },
-    { types: ['restaurant'], name: 'The Reading Room', address: 'Demo restaurant · Lakeside', rating: 4.5, reviews: 140, distance: 7.5 },
-  ].map((cafe, index) => ({ ...cafe, id: 'demo-' + index })).filter((cafe) => cafe.distance <= radiusKm);
-  status.textContent = `${cafes.length} fictional places within ${radiusKm} km. Demo mode uses no location or API key.`;
+    { types: ['cafe'], name: 'Violet Hour Coffee', address: 'Demo café · Richmond Row', rating: 4.8, distance: 0.65 },
+    { types: ['cafe'], name: 'Margin Notes Café', address: 'Demo café · Near campus', rating: 4.6, distance: 0.32 },
+    { types: ['restaurant'], name: 'The Study Table', address: 'Demo restaurant · Old East Village', rating: 4.4, distance: 1.14 },
+    { types: ['cafe'], name: 'Late Shift Espresso', address: 'Demo café · Downtown', rating: 4.7, distance: 3.5 },
+    { types: ['cafe'], name: 'Quiet Quarter', address: 'Demo café · Wortley Village', rating: 4.5, distance: 7.5 },
+  ].sort((a, b) => a.distance - b.distance)
+    .map((cafe, index) => ({ ...cafe, id: 'demo-' + index, pin: index + 1 }))
+    .filter((cafe) => cafe.distance <= radiusKm);
+  status.textContent = `Demo: ${cafes.length} fictional spots within ${radiusKm} km. No location is used.`;
   render();
 }
 get('demo').addEventListener('click', showDemo);
@@ -426,13 +631,16 @@ get('radius').addEventListener('input', () => {
 async function searchPlaces(event) {
   event.preventDefault();
   const radius = Number(get('radius').value) * 1000;
-  for (const id of ['locate', 'demo', 'radius', 'choose-area', 'search-area']) get(id).disabled = true;
+  for (const id of CONTROLS) get(id).disabled = true;
   setBusy(true);
-  status.textContent = 'Getting your location…';
+  status.textContent = event.submitter?.id === 'locate' || !event.submitter ? 'Getting your location…' : 'Preparing search…';
   try {
     let center;
-    if (event.submitter?.id === 'search-area') {
+    const origin = event.submitter?.id;
+    if (origin === 'search-area') {
       center = map.getCenter();
+    } else if (origin === 'from-campus') {
+      center = { lat: CAMPUS.lat, lng: CAMPUS.lng };
     } else {
       try {
         center = await locate();
@@ -477,6 +685,7 @@ async function searchPlaces(event) {
         name: tags.name ?? tags.brand ?? 'Unnamed ' + tags.amenity,
         types: [tags.amenity], location,
         distance: distanceKm(center, location),
+        campusDistance: distanceKm(CAMPUS, location),
         address: [tags['addr:housenumber'], tags['addr:street'], tags['addr:city']].filter(Boolean).join(' ') || 'Address not recorded',
         internet: tags.internet_access,
         website: tags.website ?? tags['contact:website'],
@@ -495,12 +704,13 @@ async function searchPlaces(event) {
     ensureMap(center);
     map.invalidateSize();
     map.setView(center, 14);
-    cafes = nextCafes;
+    cafes = nextCafes.sort((a, b) => a.distance - b.distance);
     for (const cafe of cafes) {
       const markerNumber = markers.length + 1;
+      cafe.pin = markerNumber;
       cafe.marker = L.marker(cafe.location, {
         title: cafe.name,
-        icon: L.divIcon({ className: 'study-pin', html: '<span>' + markerNumber + '</span>', iconSize: [44, 44], iconAnchor: [22, 44] }),
+        icon: L.divIcon({ className: 'study-pin', html: '<span>' + markerNumber + '</span>', iconSize: [34, 44], iconAnchor: [17, 44], popupAnchor: [0, -40] }),
       }).bindPopup(document.createTextNode(cafe.name));
       cafe.marker.on('mouseover', () => highlightCafe(cafe.id, true));
       cafe.marker.on('mouseout', () => highlightCafe(cafe.id, false));
@@ -514,18 +724,19 @@ async function searchPlaces(event) {
     }
     if (cafes.length) map.fitBounds(L.latLngBounds([center, ...cafes.map(cafe => cafe.location)]), { padding: [30, 30], maxZoom: 16 });
     status.textContent = cafes.length
-      ? `Found ${cafes.length} places within ${radius / 1000} km. Distances are straight-line estimates.`
-      : 'No places found in that radius. Try another location.';
+      ? `Found ${cafes.length} spots within ${radius / 1000} km of ${origin === 'from-campus' ? 'Western campus' : origin === 'search-area' ? 'the map centre' : 'you'}. Distances are straight-line.`
+      : 'No places found in that radius. Try a wider distance or another area.';
     render();
   } catch (error) {
     status.textContent = `Search failed. ${error.name === 'AbortError' ? 'The search timed out. Try a smaller radius.' : (error.message ?? 'Try again or use the demo.')}`;
   } finally {
     setBusy(false);
-    for (const id of ['locate', 'demo', 'radius', 'choose-area', 'search-area']) get(id).disabled = false;
+    for (const id of CONTROLS) get(id).disabled = false;
   }
 }
 get('search').addEventListener('submit', searchPlaces);
 get('search-area').addEventListener('click', () => searchPlaces({ preventDefault() {}, submitter: get('search-area') }));
+get('from-campus').addEventListener('click', () => searchPlaces({ preventDefault() {}, submitter: get('from-campus') }));
 
 function highlightCafe(id, highlighted) {
   for (const card of results.querySelectorAll('[data-place-id]')) {
@@ -542,7 +753,7 @@ function ensureMap(center) {
   get('map').hidden = false;
   get('map-placeholder').hidden = true;
   if (!map) {
-    map = L.map('map').setView(center, 12);
+    map = L.map('map').setView(center, 14);
     L.tileLayer(TILE_URL, {
       maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -554,7 +765,7 @@ function ensureMap(center) {
 function openAreaPicker() {
   document.querySelector('.layout').dataset.view = 'split';
   document.querySelectorAll('.view-switch button').forEach(button => button.setAttribute('aria-pressed', button.dataset.view === 'split'));
-  ensureMap({ lat: 43.6532, lng: -79.3832 });
+  ensureMap({ lat: CAMPUS.lat, lng: CAMPUS.lng });
   get('area-controls').hidden = false;
   get('map-panel').scrollIntoView({ block: 'nearest' });
   requestAnimationFrame(() => map.invalidateSize());
@@ -669,15 +880,8 @@ export function createCard(cafe, selected, onSelect) {
   const top = document.createElement('div');
   top.className = 'card-top';
   item.append(top);
-  const image = document.createElement('img');
-  image.src = './assets/cafe-scene.svg';
-  image.alt = 'Illustration of a café workspace, not a photograph of this place';
-  image.width = 112;
-  image.height = 100;
-  image.loading = 'lazy';
-  image.decoding = 'async';
-  image.className = 'card-image';
-  top.append(image);
+  const index = text(top, 'span', cafe.pin != null ? String(cafe.pin).padStart(2, '0') : '—', 'card-index');
+  index.setAttribute('aria-hidden', 'true');
   const main = document.createElement('div');
   main.className = 'card-main';
   top.append(main);
@@ -694,7 +898,8 @@ export function createCard(cafe, selected, onSelect) {
     get('detail').scrollIntoView({ block: 'nearest' });
   });
   const rating = Number.isFinite(cafe.rating) ? '★ ' + cafe.rating.toFixed(1) + ' · Sample rating' : 'Rating unavailable';
-  text(main, 'p', cafe.distance.toFixed(2) + ' km · ' + rating, 'card-meta');
+  const campus = Number.isFinite(cafe.campusDistance) ? ' · ' + cafe.campusDistance.toFixed(1) + ' km from campus' : '';
+  text(main, 'p', cafe.distance.toFixed(2) + ' km away' + campus + ' · ' + rating, 'card-meta');
   text(main, 'p', cafe.address, 'card-address');
   const save = text(top, 'button', saved.has(cafe.id) ? '♥' : '♡', 'favorite');
   save.type = 'button';
@@ -734,14 +939,17 @@ export function beforeRender() {
 }
 
 export function showCount(count) {
-  get('result-count').textContent = count + (count === 1 ? ' place' : ' places') + ' · Nearest first';
+  get('result-count').textContent = count + (count === 1 ? ' spot' : ' spots') + ' · Nearest first';
 }
 
 export function setBusy(busy) {
   get('list-panel').setAttribute('aria-busy', busy);
   get('skeletons').hidden = !busy;
   get('results').hidden = busy;
-  get('locate').textContent = busy ? 'Finding your spot…' : 'Find my spot ↗';
+  const arrow = document.createElement('span');
+  arrow.setAttribute('aria-hidden', 'true');
+  arrow.textContent = busy ? '' : '↗';
+  get('locate').replaceChildren(busy ? 'Scanning…' : 'Find my spot', arrow);
 }
 
 export function initializeUI(onRefresh, onHighlight, onMapResize) {
@@ -978,32 +1186,100 @@ export function renderExtraDetails(parent, cafe) {
 export const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 export const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
 
+// Reference point for "distance from campus" and the map's starting view.
+// Approximate centre of Western University's main campus, London, Ontario.
+export const CAMPUS = { lat: 43.0096, lng: -81.2737, label: 'Western campus' };
+
 ```
 
 ## assets/cafe-scene.svg
 
 ```xml
 <svg xmlns="http://www.w3.org/2000/svg" width="480" height="340" viewBox="0 0 480 340">
-<rect width="480" height="340" rx="32" fill="#f1e7da"/>
-<path d="M70 238V104a84 84 0 01168 0v134" fill="#d9e4d6"/>
-<path d="M154 24v214M70 132h168" fill="none" stroke="#faf6f0" stroke-width="10"/>
-<path d="M88 229l36-80 26 36 28-53 43 97" fill="#93ad90" opacity=".5"/>
-<ellipse cx="256" cy="290" rx="176" ry="22" fill="#dbc7ad"/>
-<path d="M75 249h346v19H75z" fill="#b77c4a"/>
-<path d="M98 268h12v72H98zm289 0h12v72h-12z" fill="#89664b"/>
-<path d="M153 239l-15-84h121l17 84" fill="#405e58"/>
-<path d="M147 165h103l11 64h-103z" fill="#b3c6b9"/>
-<path d="M139 239h154v8H139z" fill="#2b463f"/>
-<path d="M185 187h39m-35 12h29m-27 12h18" stroke="#f4f4e9" stroke-width="4" stroke-linecap="round"/>
-<path d="M316 207h21a12 12 0 010 24h-15" fill="none" stroke="#e58a2b" stroke-width="9"/>
-<path d="M287 195h39v37a17 17 0 01-39 0z" fill="#e58a2b"/>
-<ellipse cx="306" cy="195" rx="20" ry="6" fill="#6b4632"/>
-<ellipse cx="307" cy="247" rx="32" ry="4" fill="#e6d4bc"/>
-<path d="M298 177q-10-10 0-21m15 21q-10-10 0-21" fill="none" stroke="#faf6f0" stroke-width="4" stroke-linecap="round"/>
-<path d="M366 249l-7-51h39l-8 51" fill="#d0a77b"/>
-<path d="M379 199v-51" stroke="#456953" stroke-width="4"/>
-<path d="M379 183q-40-5-27-34 27 1 27 34m0-17q36-1 25-30-25 3-25 30m0-13q-22-14-10-34 19 10 10 34" fill="#5f8f6e"/>
-<path d="M90 244h45v5H90z" fill="#f7e5b8"/>
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="45%" r="75%">
+      <stop offset="0" stop-color="#22174A"/>
+      <stop offset="1" stop-color="#0B0814"/>
+    </radialGradient>
+    <linearGradient id="sweep" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#A78BFA" stop-opacity="0"/>
+      <stop offset="1" stop-color="#A78BFA" stop-opacity=".45"/>
+    </linearGradient>
+    <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+      <path d="M24 0H0V24" fill="none" stroke="#A78BFA" stroke-opacity=".08"/>
+    </pattern>
+    <clipPath id="frame"><rect width="480" height="340" rx="24"/></clipPath>
+    <style>
+      .sweep { transform-origin: 240px 170px; animation: spin 6s linear infinite; }
+      .ping { transform-origin: center; transform-box: fill-box; animation: ping 2.4s ease-out infinite; }
+      .p2 { animation-delay: .8s; } .p3 { animation-delay: 1.6s; }
+      .label { font: 500 9px ui-monospace, Menlo, monospace; letter-spacing: 1.2px; fill: #C4B0FF; }
+      .dim { fill: #8C80AE; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      @keyframes ping { 0% { transform: scale(.6); opacity: .9; } 100% { transform: scale(2.6); opacity: 0; } }
+      @media (prefers-reduced-motion: reduce) { .sweep, .ping { animation: none; } }
+    </style>
+  </defs>
+  <g clip-path="url(#frame)">
+    <rect width="480" height="340" fill="url(#bg)"/>
+    <rect width="480" height="340" fill="url(#grid)"/>
+
+    <!-- Abstract streets -->
+    <path d="M-10 230 C 90 210, 160 120, 300 110 S 470 60, 500 40" fill="none" stroke="#3D3160" stroke-width="10" stroke-linecap="round"/>
+    <path d="M60 -10 L 150 350" stroke="#2A2140" stroke-width="6"/>
+    <path d="M330 -10 L 360 350" stroke="#2A2140" stroke-width="6"/>
+    <path d="M-10 290 L 490 250" stroke="#2A2140" stroke-width="6"/>
+
+    <!-- Radar rings -->
+    <g fill="none" stroke="#A78BFA">
+      <circle cx="240" cy="170" r="40" stroke-opacity=".5"/>
+      <circle cx="240" cy="170" r="80" stroke-opacity=".32"/>
+      <circle cx="240" cy="170" r="120" stroke-opacity=".2" stroke-dasharray="3 5"/>
+      <circle cx="240" cy="170" r="160" stroke-opacity=".12"/>
+    </g>
+    <path d="M240 10 V330 M80 170 H400" stroke="#A78BFA" stroke-opacity=".12"/>
+
+    <!-- Sweep -->
+    <g class="sweep">
+      <path d="M240 170 L400 170 A160 160 0 0 0 353 57 Z" fill="url(#sweep)"/>
+      <path d="M240 170 L400 170" stroke="#C4B0FF" stroke-width="1.5"/>
+    </g>
+
+    <!-- Campus origin -->
+    <circle cx="240" cy="170" r="16" fill="#4F2683" stroke="#C4B0FF" stroke-width="2"/>
+    <circle cx="240" cy="170" r="5" fill="#FFFFFF"/>
+    <text x="262" y="196" class="label">CAMPUS</text>
+
+    <!-- Study spots -->
+    <g>
+      <circle class="ping" cx="318" cy="118" r="8" fill="none" stroke="#C4B0FF"/>
+      <circle cx="318" cy="118" r="6" fill="#A78BFA"/>
+      <text x="330" y="114" class="label">0.9 KM</text>
+    </g>
+    <g>
+      <circle class="ping p2" cx="168" cy="96" r="8" fill="none" stroke="#C4B0FF"/>
+      <circle cx="168" cy="96" r="6" fill="#A78BFA"/>
+      <text x="112" y="80" class="label">1.4 KM</text>
+    </g>
+    <g>
+      <circle class="ping p3" cx="196" cy="262" r="8" fill="none" stroke="#C4B0FF"/>
+      <circle cx="196" cy="262" r="6" fill="#A78BFA"/>
+      <text x="142" y="288" class="label">2.1 KM</text>
+    </g>
+    <circle cx="352" cy="232" r="4" fill="#5E4A99"/>
+    <circle cx="112" cy="196" r="4" fill="#5E4A99"/>
+    <circle cx="400" cy="92" r="4" fill="#5E4A99"/>
+
+    <!-- HUD -->
+    <text x="22" y="32" class="label">STUDYCAFE / SCAN</text>
+    <text x="22" y="320" class="label dim">43.01°N  81.27°W</text>
+    <g transform="translate(386 304)">
+      <rect width="74" height="22" rx="11" fill="#4F2683" fill-opacity=".6" stroke="#A78BFA" stroke-opacity=".5"/>
+      <circle cx="14" cy="11" r="3.5" fill="#7FDCA8"/>
+      <text x="24" y="14.5" class="label">3 FOUND</text>
+    </g>
+  </g>
+  <rect x=".5" y=".5" width="479" height="339" rx="23.5" fill="none" stroke="#A78BFA" stroke-opacity=".25"/>
 </svg>
 
 ```
