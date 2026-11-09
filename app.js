@@ -1,5 +1,5 @@
 import { renderExtraDetails } from './details.js';
-import { TILE_URL, OVERPASS_URL } from './config.js';
+import { TILE_URL, OVERPASS_URL, CAMPUS } from './config.js';
 import { initializeUI, matchesPreferences, createCard, beforeRender, showCount, setBusy } from './ui.js';
 
 const get = (id) => document.getElementById(id);
@@ -13,6 +13,7 @@ let cachedSearch;
 let filter = 'all';
 let activeName;
 let demoMode = false;
+const CONTROLS = ['locate', 'demo', 'radius', 'choose-area', 'search-area', 'from-campus'];
 
 function locate() {
   return new Promise((resolve, reject) => {
@@ -80,14 +81,14 @@ function render() {
   if (!selected) {
     const empty = addText(results, 'li', '', 'empty-state');
     empty.className = 'empty-state';
-    addText(empty, 'h3', 'A little room to explore.');
+    addText(empty, 'h3', 'No matches.');
     addText(empty, 'p', 'No matching places. Try another type, clear study filters or turn off Saved, or search a wider area. Saved places are shown within the current search results.');
     addText(get('detail'), 'p', 'No place selected.');
     return;
   }
   addText(get('detail'), 'h2', selected.name);
   addText(get('detail'), 'p', selected.address);
-  addText(get('detail'), 'p', selected.distance.toFixed(2) + ' km away · straight-line estimate');
+  addText(get('detail'), 'p', selected.distance.toFixed(2) + ' km away' + (Number.isFinite(selected.campusDistance) ? ' · ' + selected.campusDistance.toFixed(1) + ' km from Western campus' : '') + ' · straight-line');
   addText(get('detail'), 'p', 'Internet access · ' + (selected.internet ?? 'Not recorded'));
   addText(get('detail'), 'small', 'Noise levels, outlets and study suitability are unverified.');
   renderExtraDetails(get('detail'), selected);
@@ -121,16 +122,18 @@ function showDemo() {
   get('area-controls').hidden = true;
   get('map').hidden = true;
   get('map-placeholder').hidden = false;
-  get('map-placeholder').textContent = 'Demo listings are fictional. Use your location to explore the live map.';
+  get('map-placeholder').textContent = 'Demo listings are fictional. Search near you or from campus to see the live map.';
   const radiusKm = Number(get('radius').value);
   cafes = [
-    { types: ['cafe'], name: 'Blue Hour Coffee', address: 'Demo café · Riverside', rating: 4.8, reviews: 87, distance: 0.65 },
-    { types: ['cafe'], name: 'Margin Notes Café', address: 'Demo café · Market District', rating: 4.6, reviews: 231, distance: 0.32 },
-    { types: ['restaurant'], name: 'The Study Table', address: 'Demo café · North End', rating: 5, reviews: 3, distance: 1.14 },
-    { types: ['cafe'], name: 'Chapter Coffee', address: 'Demo café · West End', rating: 4.7, reviews: 52, distance: 3.5 },
-    { types: ['restaurant'], name: 'The Reading Room', address: 'Demo restaurant · Lakeside', rating: 4.5, reviews: 140, distance: 7.5 },
-  ].map((cafe, index) => ({ ...cafe, id: 'demo-' + index })).filter((cafe) => cafe.distance <= radiusKm);
-  status.textContent = `${cafes.length} fictional places within ${radiusKm} km. Demo mode uses no location or API key.`;
+    { types: ['cafe'], name: 'Violet Hour Coffee', address: 'Demo café · Richmond Row', rating: 4.8, distance: 0.65 },
+    { types: ['cafe'], name: 'Margin Notes Café', address: 'Demo café · Near campus', rating: 4.6, distance: 0.32 },
+    { types: ['restaurant'], name: 'The Study Table', address: 'Demo restaurant · Old East Village', rating: 4.4, distance: 1.14 },
+    { types: ['cafe'], name: 'Late Shift Espresso', address: 'Demo café · Downtown', rating: 4.7, distance: 3.5 },
+    { types: ['cafe'], name: 'Quiet Quarter', address: 'Demo café · Wortley Village', rating: 4.5, distance: 7.5 },
+  ].sort((a, b) => a.distance - b.distance)
+    .map((cafe, index) => ({ ...cafe, id: 'demo-' + index, pin: index + 1 }))
+    .filter((cafe) => cafe.distance <= radiusKm);
+  status.textContent = `Demo: ${cafes.length} fictional spots within ${radiusKm} km. No location is used.`;
   render();
 }
 get('demo').addEventListener('click', showDemo);
@@ -144,13 +147,16 @@ get('radius').addEventListener('input', () => {
 async function searchPlaces(event) {
   event.preventDefault();
   const radius = Number(get('radius').value) * 1000;
-  for (const id of ['locate', 'demo', 'radius', 'choose-area', 'search-area']) get(id).disabled = true;
+  for (const id of CONTROLS) get(id).disabled = true;
   setBusy(true);
-  status.textContent = 'Getting your location…';
+  status.textContent = event.submitter?.id === 'locate' || !event.submitter ? 'Getting your location…' : 'Preparing search…';
   try {
     let center;
-    if (event.submitter?.id === 'search-area') {
+    const origin = event.submitter?.id;
+    if (origin === 'search-area') {
       center = map.getCenter();
+    } else if (origin === 'from-campus') {
+      center = { lat: CAMPUS.lat, lng: CAMPUS.lng };
     } else {
       try {
         center = await locate();
@@ -195,6 +201,7 @@ async function searchPlaces(event) {
         name: tags.name ?? tags.brand ?? 'Unnamed ' + tags.amenity,
         types: [tags.amenity], location,
         distance: distanceKm(center, location),
+        campusDistance: distanceKm(CAMPUS, location),
         address: [tags['addr:housenumber'], tags['addr:street'], tags['addr:city']].filter(Boolean).join(' ') || 'Address not recorded',
         internet: tags.internet_access,
         website: tags.website ?? tags['contact:website'],
@@ -213,12 +220,13 @@ async function searchPlaces(event) {
     ensureMap(center);
     map.invalidateSize();
     map.setView(center, 14);
-    cafes = nextCafes;
+    cafes = nextCafes.sort((a, b) => a.distance - b.distance);
     for (const cafe of cafes) {
       const markerNumber = markers.length + 1;
+      cafe.pin = markerNumber;
       cafe.marker = L.marker(cafe.location, {
         title: cafe.name,
-        icon: L.divIcon({ className: 'study-pin', html: '<span>' + markerNumber + '</span>', iconSize: [44, 44], iconAnchor: [22, 44] }),
+        icon: L.divIcon({ className: 'study-pin', html: '<span>' + markerNumber + '</span>', iconSize: [34, 44], iconAnchor: [17, 44], popupAnchor: [0, -40] }),
       }).bindPopup(document.createTextNode(cafe.name));
       cafe.marker.on('mouseover', () => highlightCafe(cafe.id, true));
       cafe.marker.on('mouseout', () => highlightCafe(cafe.id, false));
@@ -232,18 +240,19 @@ async function searchPlaces(event) {
     }
     if (cafes.length) map.fitBounds(L.latLngBounds([center, ...cafes.map(cafe => cafe.location)]), { padding: [30, 30], maxZoom: 16 });
     status.textContent = cafes.length
-      ? `Found ${cafes.length} places within ${radius / 1000} km. Distances are straight-line estimates.`
-      : 'No places found in that radius. Try another location.';
+      ? `Found ${cafes.length} spots within ${radius / 1000} km of ${origin === 'from-campus' ? 'Western campus' : origin === 'search-area' ? 'the map centre' : 'you'}. Distances are straight-line.`
+      : 'No places found in that radius. Try a wider distance or another area.';
     render();
   } catch (error) {
     status.textContent = `Search failed. ${error.name === 'AbortError' ? 'The search timed out. Try a smaller radius.' : (error.message ?? 'Try again or use the demo.')}`;
   } finally {
     setBusy(false);
-    for (const id of ['locate', 'demo', 'radius', 'choose-area', 'search-area']) get(id).disabled = false;
+    for (const id of CONTROLS) get(id).disabled = false;
   }
 }
 get('search').addEventListener('submit', searchPlaces);
 get('search-area').addEventListener('click', () => searchPlaces({ preventDefault() {}, submitter: get('search-area') }));
+get('from-campus').addEventListener('click', () => searchPlaces({ preventDefault() {}, submitter: get('from-campus') }));
 
 function highlightCafe(id, highlighted) {
   for (const card of results.querySelectorAll('[data-place-id]')) {
@@ -260,7 +269,7 @@ function ensureMap(center) {
   get('map').hidden = false;
   get('map-placeholder').hidden = true;
   if (!map) {
-    map = L.map('map').setView(center, 12);
+    map = L.map('map').setView(center, 14);
     L.tileLayer(TILE_URL, {
       maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -272,7 +281,7 @@ function ensureMap(center) {
 function openAreaPicker() {
   document.querySelector('.layout').dataset.view = 'split';
   document.querySelectorAll('.view-switch button').forEach(button => button.setAttribute('aria-pressed', button.dataset.view === 'split'));
-  ensureMap({ lat: 43.6532, lng: -79.3832 });
+  ensureMap({ lat: CAMPUS.lat, lng: CAMPUS.lng });
   get('area-controls').hidden = false;
   get('map-panel').scrollIntoView({ block: 'nearest' });
   requestAnimationFrame(() => map.invalidateSize());
