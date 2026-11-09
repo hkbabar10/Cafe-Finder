@@ -98,15 +98,8 @@ export function createCard(cafe, selected, onSelect) {
   const top = document.createElement('div');
   top.className = 'card-top';
   item.append(top);
-  const image = document.createElement('img');
-  image.src = './assets/cafe-scene.svg';
-  image.alt = 'Illustration of a café workspace, not a photograph of this place';
-  image.width = 112;
-  image.height = 100;
-  image.loading = 'lazy';
-  image.decoding = 'async';
-  image.className = 'card-image';
-  top.append(image);
+  const index = text(top, 'span', cafe.pin != null ? String(cafe.pin).padStart(2, '0') : '—', 'card-index');
+  index.setAttribute('aria-hidden', 'true');
   const main = document.createElement('div');
   main.className = 'card-main';
   top.append(main);
@@ -123,7 +116,8 @@ export function createCard(cafe, selected, onSelect) {
     get('detail').scrollIntoView({ block: 'nearest' });
   });
   const rating = Number.isFinite(cafe.rating) ? '★ ' + cafe.rating.toFixed(1) + ' · Sample rating' : 'Rating unavailable';
-  text(main, 'p', cafe.distance.toFixed(2) + ' km · ' + rating, 'card-meta');
+  const campus = Number.isFinite(cafe.campusDistance) ? ' · ' + cafe.campusDistance.toFixed(1) + ' km from campus' : '';
+  text(main, 'p', cafe.distance.toFixed(2) + ' km away' + campus + ' · ' + rating, 'card-meta');
   text(main, 'p', cafe.address, 'card-address');
   const save = text(top, 'button', saved.has(cafe.id) ? '♥' : '♡', 'favorite');
   save.type = 'button';
@@ -163,14 +157,17 @@ export function beforeRender() {
 }
 
 export function showCount(count) {
-  get('result-count').textContent = count + (count === 1 ? ' place' : ' places') + ' · Nearest first';
+  get('result-count').textContent = count + (count === 1 ? ' spot' : ' spots') + ' · Nearest first';
 }
 
 export function setBusy(busy) {
   get('list-panel').setAttribute('aria-busy', busy);
   get('skeletons').hidden = !busy;
   get('results').hidden = busy;
-  get('locate').textContent = busy ? 'Finding your spot…' : 'Find my spot ↗';
+  const arrow = document.createElement('span');
+  arrow.setAttribute('aria-hidden', 'true');
+  arrow.textContent = busy ? '' : '↗';
+  get('locate').replaceChildren(busy ? 'Scanning…' : 'Find my spot', arrow);
 }
 
 export function initializeUI(onRefresh, onHighlight, onMapResize) {
