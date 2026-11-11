@@ -6,7 +6,7 @@
 
 **The study-spot finder for Western students who are done fighting for a seat in Weldo.**
 
-Find cafés and quiet corners around London, filter them by what actually matters when you study, and keep your own notes on the places worth coming back to.
+Find cafés and quiet corners around London, Ontario, filter them by what actually matters when you study, and keep your own notes on the places worth coming back to.
 
 ![Western Edition](https://img.shields.io/badge/edition-Western-4F2683?style=for-the-badge)
 ![London ON](https://img.shields.io/badge/London-Ontario-807F83?style=for-the-badge)
